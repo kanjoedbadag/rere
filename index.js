@@ -1,17 +1,18 @@
-// ================================
-// DISCORD VOICE BOT - STAY IN VC
-// ================================
+// =======================================================
+// DISCORD VOICE BOT + CHATGPT (TSUNDERE SOFTSPOKEN EDITION)
+// =======================================================
 
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, VoiceConnectionStatus } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, VoiceConnectionStatus } = require('@discordjs/voice');
 const express = require('express');
 
-// ===== KEEP REPLIT AWAKE =====
+// ===== KEEP RAILWAY AWAKE =====
 const app = express();
 app.get('/', (req, res) => {
-  res.send('🤖 Voice Bot is Running!');
+  res.send('🤖 AI Voice Bot (Tsundere Softspoken) is Running!');
 });
-app.listen(3000, () => console.log('✅ Keep-alive server ready'));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Keep-alive server ready on port ${PORT}`));
 
 // ===== DISCORD BOT SETUP =====
 const client = new Client({
@@ -29,91 +30,146 @@ const audioPlayer = createAudioPlayer();
 // ===== WHEN BOT IS READY =====
 client.once('clientReady', (c) => {
     console.log(`✅ Logged in as ${c.user.tag}!`);
-    console.log(`📢 Use !in`);
-    console.log(`📢 Use !out`);
+    console.log(`📢 B-bukan berarti aku siap bantuin kamu ya...!`);
 });
 
 // ===== HANDLE MESSAGES =====
 client.on('messageCreate', async message => {
-  // Ignore other bots and DMs
   if (message.author.bot || !message.guild) return;
 
-  // !join - Join voice channel
+  // ----------------------------------------
+  // FITUR 1: PERINTAH SUARA (!in dan !out)
+  // ----------------------------------------
   if (message.content.toLowerCase() === '!in') {
-    try {
-      // Leave current VC if in one
-      if (voiceConnection) {
-        voiceConnection.destroy();
-      }
+    const voiceChannel = message.member.voice.channel;
+    if (!voiceChannel) {
+      return message.reply('Ih, masuk voice channel dulu baru panggil aku... bikin bingung aja.');
+    }
 
-      // Join new VC
+    try {
+      if (voiceConnection) voiceConnection.destroy();
+
       voiceConnection = joinVoiceChannel({
-        channelId: message.member.voice.channel.id,
+        channelId: voiceChannel.id,
         guildId: message.guild.id,
         adapterCreator: message.guild.voiceAdapterCreator,
-        selfDeaf: false, // Bot deafens itself (won't hear others)
-        selfMute: false // Bot can speak if needed
+        selfDeaf: false,
+        selfMute: false
       });
 
-      // Wait for connection
-      await entersState(voiceConnection, VoiceConnectionStatus.Ready, 30_000);
-      
-      // Subscribe to audio player (plays silent audio)
-      voiceConnection.subscribe(audioPlayer);
-      
-      message.reply(`✅ Joined **${message.member.voice.channel.name}**! I'll stay here until you use \`!leave\`.`);
-      console.log(`🔊 Joined VC: ${message.member.voice.channel.name}`);
-      
+      voiceConnection.on(VoiceConnectionStatus.Ready, () => {
+        console.log(`🔊 Joined VC: ${voiceChannel.name}`);
+        voiceConnection.subscribe(audioPlayer);
+      });
+
+      message.reply(`B-yaudah, aku masuk ke **${voiceChannel.name}**. Gak usah GR ya.`);
+      return;
     } catch (error) {
       console.error('Join error:', error);
+      return message.reply(`Gagal masuk... Debug: \`${error.message}\``);
     }
   }
 
-  // !leave - Leave voice channel
   if (message.content.toLowerCase() === '!out') {
     if (voiceConnection) {
       voiceConnection.destroy();
       voiceConnection = null;
-      message.reply('✅ Left the voice channel!');
-      console.log('🔇 Left voice channel');
+      return message.reply('Dah ya, aku keluar dari voice channel. Bye.');
     } else {
-      message.reply('❌ I\'m not in a voice channel!');
+      return message.reply('Hah? Kan aku emang lagi gak di voice channel mana-mana...');
     }
   }
 
-  // !ping - Check if bot is alive
-  if (message.content.toLowerCase() === '!ping') {
-    const latency = Date.now() - message.createdTimestamp;
-    message.reply(`🏓 Pong! Latency: ${latency}ms | Voice: ${voiceConnection ? 'Connected 🔊' : 'Not connected 🔇'}`);
+  // ----------------------------------------
+  // FITUR 2: JAWABAN OTOMATIS MENGGUNAKAN CHATGPT
+  // ----------------------------------------
+  const isMentioned = message.mentions.has(client.user);
+  const isCommand = message.content.startsWith('!tanya ');
+
+  if (isMentioned || isCommand) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return message.reply('❌ Kamu belum pasang variabel OPENAI_API_KEY di Railway...');
+    }
+
+    const prompt = message.content
+      .replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '')
+      .replace('!tanya ', '')
+      .trim();
+    
+    if (!prompt) {
+      return message.reply('Ngetik apaan sih? Nanya yang jelas dong, jangan kosongan.');
+    }
+
+    try {
+      await message.channel.sendTyping();
+
+      // Memanggil API ChatGPT
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "Kamu adalah cewek tsundere yang berjiwa softspoken, lembut, anggun tapi gengsian, malu-malu, agak jual mahal, dan ketus kalau menjawab. JANGAN YAPPING. Langsung jawab ke inti masalah dengan sangat padat (maksimal 1-2 kalimat). Gunakan bahasa Indonesia kasual yang lembut tapi menyangkal perhatian (contoh: 'Nih jawabannya... b-bukan karena aku peduli ya!', 'Gini aja gak tahu... dasar bodoh. Jawabannya itu...'). Jangan pernah bertele-tele atau memakai kalimat pembuka formal."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          max_tokens: 150
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.choices && data.choices[0].message.content) {
+        const replyText = data.choices[0].message.content.trim().substring(0, 1950);
+        await message.reply(replyText);
+      } else {
+        const rawError = JSON.stringify(data).substring(0, 1800);
+        await message.reply(`parhan lagi bobo\n\`\`\`json\n${rawError}\n\`\`\``);
+      }
+
+    } catch (error) {
+      console.error('ChatGPT API Error:', error);
+      await message.reply(`parhan lagi bobo\n\`\`\`cmd\n${error.stack ? error.stack.substring(0, 1800) : error.message}\n\`\`\``);
+    }
   }
 });
 
-// ===== HANDLE VOICE DISCONNECTS =====
-client.on('voiceStateUpdate', (oldState, newState) => {
-  // If bot was moved or disconnected
-  if (oldState.id === client.user.id && !newState.channelId && voiceConnection) {
-    console.log('⚠️ Bot was disconnected from voice!');
-    voiceConnection = null;
+// ===== GLOBAL ANTI-CRASH SYSTEM =====
+const kirimPesanSistem = async (err) => {
+  try {
+    const channel = client.channels.cache.filter(c => c.type === 0).first(); 
+    if (channel) {
+      await channel.send(`💤 parhan lagi bobo\n\`\`\`cmd\n${err ? err.message : 'Unknown Global Error'}\n\`\`\``);
+    }
+  } catch (e) {
+    console.error('Gagal ngirim pesan anti-crash:', e);
   }
-});
-
-// ===== ERROR HANDLING =====
-audioPlayer.on('error', error => {
-  console.error('Audio player error:', error);
-});
+};
 
 process.on('unhandledRejection', error => {
   console.error('Unhandled promise rejection:', error);
+  kirimPesanSistem(error);
+});
+
+process.on('uncaughtException', error => {
+  console.error('Uncaught Exception:', error);
+  kirimPesanSistem(error);
 });
 
 // ===== START THE BOT =====
-// Get token from Secrets (we'll set this up next)
 const token = process.env.DISCORD_TOKEN;
 if (!token) {
   console.error('❌ ERROR: No Discord token found!');
-  console.log('💡 Go to Tools → Secrets and add DISCORD_TOKEN');
 } else {
   client.login(token);
-
 }
-
