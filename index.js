@@ -1,5 +1,5 @@
 // =======================================================
-// DISCORD VOICE BOT + CHATGPT (TSUNDERE SOFTSPOKEN EDITION)
+// DISCORD VOICE BOT + GEMINI AI (TSUNDERE SOFTSPOKEN EDITION)
 // =======================================================
 
 const { Client, GatewayIntentBits } = require('discord.js');
@@ -9,7 +9,7 @@ const express = require('express');
 // ===== KEEP RAILWAY AWAKE =====
 const app = express();
 app.get('/', (req, res) => {
-  res.send('🤖 AI Voice Bot (Tsundere Softspoken) is Running!');
+  res.send('🤖 AI Voice Bot (Gemini Tsundere) is Running!');
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Keep-alive server ready on port ${PORT}`));
@@ -81,15 +81,15 @@ client.on('messageCreate', async message => {
   }
 
   // ----------------------------------------
-  // FITUR 2: JAWABAN OTOMATIS MENGGUNAKAN CHATGPT
+  // FITUR 2: JAWABAN OTOMATIS MENGGUNAKAN GEMINI AI
   // ----------------------------------------
   const isMentioned = message.mentions.has(client.user);
   const isCommand = message.content.startsWith('!tanya ');
 
   if (isMentioned || isCommand) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY; // Kembali menggunakan key Gemini
     if (!apiKey) {
-      return message.reply('❌ Kamu belum pasang variabel OPENAI_API_KEY di Railway...');
+      return message.reply('❌ Kamu belum pasang variabel GEMINI_API_KEY di Railway...');
     }
 
     const prompt = message.content
@@ -104,33 +104,31 @@ client.on('messageCreate', async message => {
     try {
       await message.channel.sendTyping();
 
-      // Memanggil API ChatGPT
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+      
+      const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: "Kamu adalah cewek tsundere yang berjiwa softspoken, lembut, anggun tapi gengsian, malu-malu, agak jual mahal, dan ketus kalau menjawab. JANGAN YAPPING. Langsung jawab ke inti masalah dengan sangat padat (maksimal 1-2 kalimat). Gunakan bahasa Indonesia kasual yang lembut tapi menyangkal perhatian (contoh: 'Nih jawabannya... b-bukan karena aku peduli ya!', 'Gini aja gak tahu... dasar bodoh. Jawabannya itu...'). Jangan pernah bertele-tele atau memakai kalimat pembuka formal."
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          max_tokens: 150
+          contents: [{ parts: [{ text: prompt }] }],
+          // KONFIGURASI PERSONA TSUNDERE SOFTSPOKEN TO THE POINT
+          systemInstruction: {
+            parts: [{ text: "Kamu adalah cewek tsundere yang berjiwa softspoken, lembut, anggun tapi gengsian, malu-malu, agak jual mahal, dan ketus kalau menjawab. JANGAN YAPPING atau bertele-tele. Langsung jawab ke inti masalah dengan sangat padat (maksimal 1-2 kalimat). Gunakan bahasa Indonesia kasual yang lembut tapi menyangkal perhatian (contoh: 'Nih jawabannya... b-bukan karena aku peduli ya!', 'Gini aja gak tahu... dasar bodoh. Jawabannya itu...'). Jangan pernah pakai kalimat pembuka formal." }]
+          },
+          // BYPASS SAFETY SETTINGS
+          safetySettings: [
+            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+          ]
         })
       });
 
       const data = await response.json();
       
-      if (data.choices && data.choices[0].message.content) {
-        const replyText = data.choices[0].message.content.trim().substring(0, 1950);
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        const replyText = data.candidates[0].content.parts[0].text.substring(0, 1950);
         await message.reply(replyText);
       } else {
         const rawError = JSON.stringify(data).substring(0, 1800);
@@ -138,7 +136,7 @@ client.on('messageCreate', async message => {
       }
 
     } catch (error) {
-      console.error('ChatGPT API Error:', error);
+      console.error('Gemini AI Error:', error);
       await message.reply(`parhan lagi bobo\n\`\`\`cmd\n${error.stack ? error.stack.substring(0, 1800) : error.message}\n\`\`\``);
     }
   }
