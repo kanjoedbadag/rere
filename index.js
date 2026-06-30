@@ -1,5 +1,5 @@
 // =======================================================
-// DISCORD VOICE BOT + GEMINI AI (TSUNDERE SOFTSPOKEN EDITION)
+// DISCORD VOICE BOT + GEMINI AI (TSUNDERE SOFTSPOKEN + ANTI-CRASH)
 // =======================================================
 
 const { Client, GatewayIntentBits } = require('discord.js');
@@ -9,7 +9,7 @@ const express = require('express');
 // ===== KEEP RAILWAY AWAKE =====
 const app = express();
 app.get('/', (req, res) => {
-  res.send('🤖 AI Voice Bot (Gemini Tsundere) is Running!');
+  res.send('🤖 AI Voice Bot (Tsundere Edition) is Running!');
 });
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Keep-alive server ready on port ${PORT}`));
@@ -87,7 +87,7 @@ client.on('messageCreate', async message => {
   const isCommand = message.content.startsWith('!tanya ');
 
   if (isMentioned || isCommand) {
-    const apiKey = process.env.GEMINI_API_KEY; // Kembali menggunakan key Gemini
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return message.reply('❌ Kamu belum pasang variabel GEMINI_API_KEY di Railway...');
     }
@@ -111,11 +111,9 @@ client.on('messageCreate', async message => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          // KONFIGURASI PERSONA TSUNDERE SOFTSPOKEN TO THE POINT
           systemInstruction: {
             parts: [{ text: "Kamu adalah cewek tsundere yang berjiwa softspoken, lembut, anggun tapi gengsian, malu-malu, agak jual mahal, dan ketus kalau menjawab. JANGAN YAPPING atau bertele-tele. Langsung jawab ke inti masalah dengan sangat padat (maksimal 1-2 kalimat). Gunakan bahasa Indonesia kasual yang lembut tapi menyangkal perhatian (contoh: 'Nih jawabannya... b-bukan karena aku peduli ya!', 'Gini aja gak tahu... dasar bodoh. Jawabannya itu...'). Jangan pernah pakai kalimat pembuka formal." }]
           },
-          // BYPASS SAFETY SETTINGS
           safetySettings: [
             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
@@ -132,12 +130,12 @@ client.on('messageCreate', async message => {
         await message.reply(replyText);
       } else {
         const rawError = JSON.stringify(data).substring(0, 1800);
-        await message.reply(`parhan lagi bobo\n\`\`\`json\n${rawError}\n\`\`\``);
+        await message.reply(`💤 A-aku lagi bobo tahu! Jangan diganggu...!\n\`\`\`json\n${rawError}\n\`\`\``);
       }
 
     } catch (error) {
       console.error('Gemini AI Error:', error);
-      await message.reply(`parhan lagi bobo\n\`\`\`cmd\n${error.stack ? error.stack.substring(0, 1800) : error.message}\n\`\`\``);
+      await message.reply(`💤 A-aku lagi bobo tahu! Jangan diganggu...!\n\`\`\`cmd\n${error.stack ? error.stack.substring(0, 1800) : error.message}\n\`\`\``);
     }
   }
 });
@@ -147,7 +145,7 @@ const kirimPesanSistem = async (err) => {
   try {
     const channel = client.channels.cache.filter(c => c.type === 0).first(); 
     if (channel) {
-      await channel.send(`💤 parhan lagi bobo\n\`\`\`cmd\n${err ? err.message : 'Unknown Global Error'}\n\`\`\``);
+      await channel.send(`💤 A-aku lagi bobo tahu! Jangan diganggu...!\n\`\`\`cmd\n${err ? err.message : 'Unknown Global Error'}\n\`\`\``);
     }
   } catch (e) {
     console.error('Gagal ngirim pesan anti-crash:', e);
