@@ -27,11 +27,10 @@ let voiceConnection = null;
 const audioPlayer = createAudioPlayer();
 
 // ===== WHEN BOT IS READY =====
-client.once(Events.ClientReady, () => {
-  console.log(`✅ Logged in as ${client.user.tag}!`);
-  console.log(`📢 Use !sinire`);
-  console.log(`📢 Use !leave`);
-});
+client.once('clientReady', (c) => {
+    console.log(`✅ Logged in as ${c.user.tag}!`);
+    console.log(`📢 Use !in`);
+    console.log(`📢 Use !out`);
 });
 
 // ===== HANDLE MESSAGES =====
