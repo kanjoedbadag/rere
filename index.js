@@ -1,5 +1,5 @@
 // =======================================================
-// DISCORD VOICE BOT + GEMINI AI (TSUNDERE SOFTSPOKEN + ANTI-CRASH)
+// DISCORD VOICE BOT + GEMINI AI (TSUNDERE SOFTSPOKEN)
 // =======================================================
 
 const { Client, GatewayIntentBits } = require('discord.js');
@@ -7,7 +7,7 @@ const { joinVoiceChannel, createAudioPlayer, VoiceConnectionStatus } = require('
 const express = require('express');
 
 // ===== KEEP RAILWAY AWAKE =====
-const app = express();
+const app = Pattern = express();
 app.get('/', (req, res) => {
   res.send('🤖 AI Voice Bot (Tsundere Edition) is Running!');
 });
@@ -28,7 +28,7 @@ let voiceConnection = null;
 const audioPlayer = createAudioPlayer();
 
 // ===== WHEN BOT IS READY =====
-client.once('clientReady', (c) => {
+client.once('ready', (c) => { // Menggunakan 'ready' sesuai standar discord.js v14
     console.log(`✅ Logged in as ${c.user.tag}!`);
     console.log(`📢 B-bukan berarti aku siap bantuin kamu ya...!`);
 });
@@ -130,36 +130,14 @@ client.on('messageCreate', async message => {
         await message.reply(replyText);
       } else {
         const rawError = JSON.stringify(data).substring(0, 1800);
-        await message.reply(`💤 A-aku lagi bobo tahu! Jangan diganggu...!\n\`\`\`json\n${rawError}\n\`\`\``);
+        await message.reply(`Ada yang salah sama API-nya... B-bukan salahku ya!\n\`\`\`json\n${rawError}\n\`\`\``);
       }
 
     } catch (error) {
       console.error('Gemini AI Error:', error);
-      await message.reply(`💤 A-aku lagi bobo tahu! Jangan diganggu...!\n\`\`\`cmd\n${error.stack ? error.stack.substring(0, 1800) : error.message}\n\`\`\``);
+      await message.reply(`Akses ke AI-nya gagal total... Ih, repot amat.\n\`\`\`cmd\n${error.message}\n\`\`\``);
     }
   }
-});
-
-// ===== GLOBAL ANTI-CRASH SYSTEM =====
-const kirimPesanSistem = async (err) => {
-  try {
-    const channel = client.channels.cache.filter(c => c.type === 0).first(); 
-    if (channel) {
-      await channel.send(`💤 A-aku lagi bobo tahu! Jangan diganggu...!\n\`\`\`cmd\n${err ? err.message : 'Unknown Global Error'}\n\`\`\``);
-    }
-  } catch (e) {
-    console.error('Gagal ngirim pesan anti-crash:', e);
-  }
-};
-
-process.on('unhandledRejection', error => {
-  console.error('Unhandled promise rejection:', error);
-  kirimPesanSistem(error);
-});
-
-process.on('uncaughtException', error => {
-  console.error('Uncaught Exception:', error);
-  kirimPesanSistem(error);
 });
 
 // ===== START THE BOT =====
